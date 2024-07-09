@@ -42,6 +42,13 @@ class Scratch3MBot
                 console.log('Error colno: ', event.colno);
             }
         });
+
+        // Listen for messages
+        this.socket.addEventListener('message', (event) => {
+            var msg = JSON.parse(event.data)
+            // console.log(event.data)
+            // robotState = JSON.parse(event.data);
+        });
     }
 
     getInfo () {
@@ -306,14 +313,9 @@ class Scratch3MBot
         this.socket.send(JSON.stringify(obj));
     }
     detectObstacle (args) {
-        const obj = {
-            "cmd": "read_lidar",
-            "args": {}
+        if (robotState == null) {
+            return false;
         }
-        this.socket.send(JSON.stringify(obj));
-        
-        msg = this.socket.recv();
-        lidar_msg = JSON.parse(msg);
         
         const dir = args.DIR;
         // Return true if there is an obstacle in the specified direction
