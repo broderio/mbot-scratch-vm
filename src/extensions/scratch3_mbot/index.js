@@ -344,9 +344,28 @@ class Scratch3MBot
         return odometry_msg.x / FT_TO_M;
     }
     getYPosition () {
-        // Same as getXPosition for y
+        const obj = {
+            "cmd": "read_odometry",
+            "args": {}
+        }
+        this.socket.send(JSON.stringify(obj));
+
+        msg = this.socket.recv();
+        odometry_msg = JSON.parse(msg);
+        return odometry_msg.y / FT_TO_M;
     }
+        // Same as getXPosition for y;
+    
     getDirection () {
+        const obj = {
+            "cmd": "read_odometry",
+            "args": {}
+        }
+        this.socket.send(JSON.stringify(obj));
+
+        msg = this.socket.recv();
+        odometry_msg = JSON.parse(msg);
+        return odometry_msg.theta;
         // Same as getXPosition for theta
     }
 }
