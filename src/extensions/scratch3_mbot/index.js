@@ -45,9 +45,7 @@ class Scratch3MBot
 
         // Listen for messages
         this.socket.addEventListener('message', (event) => {
-            var msg = JSON.parse(event.data)
-            // console.log(event.data)
-            // robotState = JSON.parse(event.data);
+            this.robotState = JSON.parse(event.data)
         });
     }
 
@@ -110,11 +108,15 @@ class Scratch3MBot
                     opcode: 'detectObstacle',
                     text: formatMessage({
                         id: 'mbot.detectObstacleBlock',
-                        default: 'is there obstacle to the robot\'s [DIR]?',
+                        default: 'is there an obstacle within [DIST] meters the robot\'s [DIR]?',
                         description: 'Detect if there is an obstacle in the specified direction relative to the robot.'
                     }),
                     blockType: BlockType.BOOLEAN,
                     arguments: {
+                        DIST: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0.5
+                        },
                         DIR: {
                             type: ArgumentType.STRING,
                             menu: 'direction',
@@ -281,7 +283,7 @@ class Scratch3MBot
         };
     }
     drive (args) {
-        const speed = args.SPEED
+        const speed = args.SPEED * 1.0;
         const obj = {
             "cmd": "drive",
             "args": {
@@ -294,6 +296,7 @@ class Scratch3MBot
     }
     turn (args) {
         const dir = args.DIR;
+        console.log(typeof(args.SPEED))
         const speed = (dir === 'left') ? args.SPEED * DEG_TO_RAD : -args.SPEED * DEG_TO_RAD;
         const obj = {
             "cmd": "drive",
@@ -313,12 +316,41 @@ class Scratch3MBot
         this.socket.send(JSON.stringify(obj));
     }
     detectObstacle (args) {
-        if (robotState == null) {
+        if (this.robotState == null) {
             return false;
         }
         
-        const dir = args.DIR;
-        // Return true if there is an obstacle in the specified direction
+        var dir = undefined
+        switch (args.DIR) {
+            case 'right':
+                dir = 270 * DEG_TO_RAD
+                break
+            case 'left':
+                dir = 90 * DEG_TO_RAD
+                break
+            case 'front':
+                dir = 0
+                break
+            case 'back':
+                dir = 180 * DEG_TO_RAD
+                break
+        }
+
+        if (dir === undefined) {
+            return false;
+        }
+
+        const dist = args.DIST * FT_TO_M
+        const slice_size = 30 * DEG_TO_RAD
+
+        for (let i = 0; i < this.robotState.scan.ranges.length; i++) {
+            var range = this.robotState.scan.ranges[i]
+            var theta = this.robotState.scan.thetas[i]
+            if (range < dist && range > 0 && Math.abs(theta - dir) < slice_size) {
+                return true
+            }
+        }
+        return false
 
     }
     reconnectRobot () {
@@ -333,40 +365,15 @@ class Scratch3MBot
         this.socket.send(JSON.stringify(obj));
     }
     getXPosition () {
-        const obj = {
-            "cmd": "read_odometry",
-            "args": {}
-        }
-        this.socket.send(JSON.stringify(obj));
-
-        msg = this.socket.recv();
-        odometry_msg = JSON.parse(msg);
-        return odometry_msg.x / FT_TO_M;
+        return this.robotState.pose.x;
     }
+
     getYPosition () {
-        const obj = {
-            "cmd": "read_odometry",
-            "args": {}
-        }
-        this.socket.send(JSON.stringify(obj));
-
-        msg = this.socket.recv();
-        odometry_msg = JSON.parse(msg);
-        return odometry_msg.y / FT_TO_M;
+        return this.robotState.pose.y;
     }
-        // Same as getXPosition for y;
     
     getDirection () {
-        const obj = {
-            "cmd": "read_odometry",
-            "args": {}
-        }
-        this.socket.send(JSON.stringify(obj));
-
-        msg = this.socket.recv();
-        odometry_msg = JSON.parse(msg);
-        return odometry_msg.theta;
-        // Same as getXPosition for theta
+        return this.robotState.pose.theta * 180 / Math.PI;
     }
 }
 
