@@ -64,7 +64,7 @@ class Scratch3MBot
                     }),
                     blockType: BlockType.COMMAND,
                     arguments: {
-                        DIST: {
+                        SPEED: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 0.25
                         }
@@ -84,7 +84,7 @@ class Scratch3MBot
                             menu: 'angle',
                             defaultValue: 'left'
                         },
-                        ANGLE: {
+                        SPEED: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 90
                         }
@@ -274,10 +274,11 @@ class Scratch3MBot
         };
     }
     drive (args) {
+        const speed = args.SPEED
         const obj = {
             "cmd": "drive",
             "args": {
-                "vx": args.SPEED,
+                "vx": speed,
                 "vy": 0,
                 "wz": 0
             }
@@ -285,8 +286,8 @@ class Scratch3MBot
         this.socket.send(JSON.stringify(obj));
     }
     turn (args) {
-        const speed = args.SPEED * DEG_TO_RAD;
-        speed = (args.DIR === 'left') ? speed : -speed;
+        const dir = args.DIR;
+        const speed = (dir === 'left') ? args.SPEED * DEG_TO_RAD : -args.SPEED * DEG_TO_RAD;
         const obj = {
             "cmd": "drive",
             "args": {
@@ -341,9 +342,28 @@ class Scratch3MBot
         return odometry_msg.x / FT_TO_M;
     }
     getYPosition () {
-        // Same as getXPosition for y
+        const obj = {
+            "cmd": "read_odometry",
+            "args": {}
+        }
+        this.socket.send(JSON.stringify(obj));
+
+        msg = this.socket.recv();
+        odometry_msg = JSON.parse(msg);
+        return odometry_msg.y / FT_TO_M;
     }
+        // Same as getXPosition for y;
+    
     getDirection () {
+        const obj = {
+            "cmd": "read_odometry",
+            "args": {}
+        }
+        this.socket.send(JSON.stringify(obj));
+
+        msg = this.socket.recv();
+        odometry_msg = JSON.parse(msg);
+        return odometry_msg.theta;
         // Same as getXPosition for theta
     }
 }
