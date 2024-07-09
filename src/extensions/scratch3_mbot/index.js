@@ -64,7 +64,7 @@ class Scratch3MBot
                     }),
                     blockType: BlockType.COMMAND,
                     arguments: {
-                        DIST: {
+                        SPEED: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 0.25
                         }
@@ -84,7 +84,7 @@ class Scratch3MBot
                             menu: 'angle',
                             defaultValue: 'left'
                         },
-                        ANGLE: {
+                        SPEED: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 90
                         }
@@ -274,10 +274,11 @@ class Scratch3MBot
         };
     }
     drive (args) {
+        const speed = args.SPEED
         const obj = {
             "cmd": "drive",
             "args": {
-                "vx": args.SPEED,
+                "vx": speed,
                 "vy": 0,
                 "wz": 0
             }
@@ -285,8 +286,8 @@ class Scratch3MBot
         this.socket.send(JSON.stringify(obj));
     }
     turn (args) {
-        const speed = args.SPEED * DEG_TO_RAD;
-        speed = (args.DIR === 'left') ? speed : -speed;
+        const dir = args.DIR;
+        const speed = (dir === 'left') ? args.SPEED * DEG_TO_RAD : -args.SPEED * DEG_TO_RAD;
         const obj = {
             "cmd": "drive",
             "args": {
