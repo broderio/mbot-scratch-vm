@@ -125,6 +125,25 @@ class Scratch3MBot
                     }
                 },
                 {
+                    opcode: 'detectObstacleAdvanced',
+                    text: formatMessage({
+                        id: 'mbot.detectObstacleBlockAdvanced',
+                        default: 'is there an obstacle within [DIST] meters the robot\'s [ANGLE]?',
+                        description: 'Detect if there is an obstacle in the specified angle relative to the robot.'
+                    }),
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        DIST: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0.5
+                        },
+                        ANGLE: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
                     opcode: `reconnectRobot`,
                     text: formatMessage({
                         id: 'mbot.reconnectRobotBlock',
@@ -173,6 +192,14 @@ class Scratch3MBot
                     }),
                     blockType: BlockType.REPORTER,
                     arguments: {}
+                },
+                {
+                    opcode: `getCamera`,
+                    text: formatMessage({
+                        id: 'mbot.getCameraBlock',
+                        default: 'camera number',
+                        description: 'Get the number in view of the camera.'
+                    })
                 }
             ],
             menus: {
@@ -351,7 +378,29 @@ class Scratch3MBot
             }
         }
         return false
+    }
+    detectObstacleAdvanced(args){
+        if (this.robotState == null) {
+            return false;
+        }
+        
+        var dir = args.ANGLE * DEG_TO_RAD
 
+        if (dir === undefined) {
+            return false;
+        }
+
+        const dist = args.DIST * FT_TO_M
+        const slice_size = 30 * DEG_TO_RAD
+
+        for (let i = 0; i < this.robotState.scan.ranges.length; i++) {
+            var range = this.robotState.scan.ranges[i]
+            var theta = this.robotState.scan.thetas[i]
+            if (range < dist && range > 0 && Math.abs(theta - dir) < slice_size) {
+                return true
+            }
+        }
+        return false
     }
     reconnectRobot () {
         this.socket.close();
@@ -370,11 +419,14 @@ class Scratch3MBot
 
     getYPosition () {
         return this.robotState.pose.y;
-    }
-    
+    } 
     getDirection () {
         return this.robotState.pose.theta * 180 / Math.PI;
     }
+    getCamera () {
+        return //Insert Robot Camera data collection here
+    }
+
 }
 
 
