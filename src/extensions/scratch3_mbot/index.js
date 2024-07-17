@@ -194,10 +194,10 @@ class Scratch3MBot
                     arguments: {}
                 },
                 {
-                    opcode: `getCamera`,
+                    opcode: `predictNumber`,
                     text: formatMessage({
-                        id: 'mbot.getCameraBlock',
-                        default: 'camera number',
+                        id: 'mbot.predictNumberBlock',
+                        default: 'number from image',
                         description: 'Get the number in view of the camera.'
                     })
                 }
@@ -258,51 +258,6 @@ class Scratch3MBot
                                 description: 'Right direction.'
                             }),
                             value: 'right'
-                        }
-                    ]
-                },
-                object: {
-                    acceptReporters: true,
-                    items: [
-                        {
-                            text: formatMessage({
-                                id: 'mbot.objPerson',
-                                default: 'person',
-                                description: 'Person object.'
-                            }),
-                            value: 'person'
-                        },
-                        {
-                            text: formatMessage({
-                                id: 'mbot.objDog',
-                                default: 'dog',
-                                description: 'Dog object.'
-                            }),
-                            value: 'dog'
-                        },
-                        {
-                            text: formatMessage({
-                                id: 'mbot.objCat',
-                                default: 'cat',
-                                description: 'Cat object.'
-                            }),
-                            value: 'cat'
-                        },
-                        {
-                            text: formatMessage({
-                                id: 'mbot.objCar',
-                                default: 'car',
-                                description: 'Car object.'
-                            }),
-                            value: 'car'
-                        },
-                        {
-                            text: formatMessage({
-                                id: 'mbot.objBicycle',
-                                default: 'bicycle',
-                                description: 'Bicycle object.'
-                            }),
-                            value: 'bicycle'
                         }
                     ]
                 }
@@ -367,7 +322,7 @@ class Scratch3MBot
             return false;
         }
 
-        const dist = args.DIST * FT_TO_M
+        const dist = args.DIST
         const slice_size = 30 * DEG_TO_RAD
 
         for (let i = 0; i < this.robotState.scan.ranges.length; i++) {
@@ -390,7 +345,7 @@ class Scratch3MBot
             return false;
         }
 
-        const dist = args.DIST * FT_TO_M
+        const dist = args.DIST
         const slice_size = 30 * DEG_TO_RAD
 
         for (let i = 0; i < this.robotState.scan.ranges.length; i++) {
@@ -423,8 +378,8 @@ class Scratch3MBot
     getDirection () {
         return this.robotState.pose.theta * 180 / Math.PI;
     }
-    getCamera () {
-        return //Insert Robot Camera data collection here
+    predictNumber () {
+        return this.robotState.prediction
     }
 
 }
