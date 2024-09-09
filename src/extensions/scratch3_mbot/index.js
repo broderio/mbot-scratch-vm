@@ -269,7 +269,7 @@ class Scratch3MBot
         const obj = {
             "cmd": "drive",
             "args": {
-                "vx": speed,
+                "vx": -speed,
                 "vy": 0,
                 "wz": 0
             }
@@ -285,7 +285,7 @@ class Scratch3MBot
             "args": {
                 "vx": 0,
                 "vy": 0,
-                "wz": speed
+                "wz": -speed
             }
         }
         this.socket.send(JSON.stringify(obj));
