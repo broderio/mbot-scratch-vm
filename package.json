@@ -64,6 +64,7 @@
     "htmlparser2": "^3.10.0",
     "immutable": "^3.8.1",
     "jszip": "^3.1.5",
+    "mbot-js-api": "file:../mbot_bridge/mbot_js",
     "minilog": "^3.1.0",
     "scratch-audio": "^1.0.6",
     "scratch-parser": "^5.1.1",
