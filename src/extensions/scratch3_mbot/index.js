@@ -329,7 +329,7 @@ class Scratch3MBot
         }
         return false
     }
-    angelToNearestObstacle () {
+    angleToNearestObstacle () {
         if (this.mbot_scan == null) {
             return 0;
         }
