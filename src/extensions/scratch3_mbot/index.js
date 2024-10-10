@@ -257,11 +257,7 @@ class Scratch3MBot
     //     this.socket.send(JSON.stringify(obj));
     // }
     stop () {
-        const obj = {
-            "cmd": "stop",
-            "args": {}
-        }
-        this.socket.send(JSON.stringify(obj));
+        this.mbot.drive(0, 0, 0);
     }
     // detectObstacle (args) {
     //     if (this.robotState == null) {
@@ -301,7 +297,7 @@ class Scratch3MBot
     //     return false
     // }
     detectObstacle(args){
-        if (this.robotState == null) {
+        if (this.mbot_scan == null) {
             return false;
         }
         
@@ -314,9 +310,9 @@ class Scratch3MBot
         const dist = args.DIST
         const slice_size = 30 * DEG_TO_RAD
 
-        for (let i = 0; i < this.robotState.scan.ranges.length; i++) {
-            var range = this.robotState.scan.ranges[i]
-            var theta = this.robotState.scan.thetas[i]
+        for (let i = 0; i < this.mbot_scan.data.ranges.length; i++) {
+            var range = this.mbot_scan.data.ranges[i]
+            var theta = this.mbot_scan.data.thetas[i]
             if (range < dist && range > 0 && Math.abs(theta - dir) < slice_size) {
                 return true
             }
@@ -331,14 +327,14 @@ class Scratch3MBot
         this.mbot.publish(MBotAPI.config.RESET_ODOMETRY.channel, { x: 0, y: 0, theta: 0 });
     }
     getXPosition () {
-        return this.mbot_odom.x;
+        return this.mbot_odom.data.x;
     }
 
     getYPosition () {
-        return this.mbot_odom.y;
+        return this.mbot_odom.data.y;
     } 
     getDirection () {
-        return this.mbot_odom.theta * 180 / Math.PI;
+        return this.mbot_odom.data.theta * 180 / Math.PI;
     }
     // predictNumber () {
     //     return this.robotState.prediction
