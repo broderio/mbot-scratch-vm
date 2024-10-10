@@ -333,7 +333,7 @@ class Scratch3MBot
     getYPosition () {
         return this.mbot_odom.data.y;
     } 
-    getDirection () {
+    getHeading () {
         return this.mbot_odom.data.theta * 180 / Math.PI;
     }
     // predictNumber () {
