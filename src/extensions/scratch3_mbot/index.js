@@ -1,17 +1,21 @@
 const ArgumentType = require('../../extension-support/argument-type');
 const BlockType = require('../../extension-support/block-type');
 const formatMessage = require('format-message');
+const MBotAPI = require('mbot_js/dist/main.js');
 
 const menuIconURI = "";
 const blockIconURI = "";
 
-const WS_URL = "ws://" + window.location.hostname + ":8765";
+const mbotIP = window.location.host.split(":")[0];
+
 const FT_TO_M = 0.3048;
 const DEG_TO_RAD = Math.PI / 180;
 
 class Scratch3MBot
 {
-    robotState = null;
+    mbot;
+    mbot_odom;
+    mbot_scan;
 
     constructor(runtime)
     {
@@ -20,33 +24,13 @@ class Scratch3MBot
     }
 
     connectToServer() {
-        this.socket = new WebSocket(WS_URL);
+        this.mbot = new MBotAPI.MBot(mbotIP);
+        this.mbot.readHostname().then((hostname) => { console.log("hostname:", hostname); });
+        this.mbot.readChannels().then((chs) => { console.log("chs:", chs); });
+        this.mbot.drive(0, 0, 0);
 
-        // Connection opened
-        this.socket.addEventListener('open', (event) => {
-            console.log('Server connection opened');
-        });
-        
-        // Connection closed
-        this.socket.addEventListener('close', (event) => {
-            console.log('Server connection closed: ', event.code);
-        });
-        
-        // Connection error
-        this.socket.addEventListener('error', (event) => {
-            console.log('WebSocket error: ', event);
-            if (event instanceof ErrorEvent) {
-                console.log('Error message: ', event.message);
-                console.log('Error filename: ', event.filename);
-                console.log('Error lineno: ', event.lineno);
-                console.log('Error colno: ', event.colno);
-            }
-        });
-
-        // Listen for messages
-        this.socket.addEventListener('message', (event) => {
-            this.robotState = JSON.parse(event.data)
-        });
+        this.mbot.subscribe(MBotAPI.config.ODOMETRY.channel, (odom) => { this.mbot_odom = odom; });
+        this.mbot.subscribe(MBotAPI.config.LIDAR.channel, (scan) => { this.mbot_scan = scan; });
     }
 
     getInfo () {
@@ -64,34 +48,22 @@ class Scratch3MBot
                     opcode: 'drive',
                     text: formatMessage({
                         id: 'mbot.driveBlock',
-                        default: 'drive robot at [SPEED] meters per second',
-                        description: 'Move the robot forward at a specified speed.'
+                        default: 'drive(vx: [VX], vy: [VY], wz: [WZ])',
+                        description: 'Drive the robot'
                     }),
                     blockType: BlockType.COMMAND,
                     arguments: {
-                        SPEED: {
+                        VX: {
                             type: ArgumentType.NUMBER,
-                            defaultValue: 0.25
-                        }
-                    }
-                },
-                {
-                    opcode: 'turn',
-                    text: formatMessage({
-                        id: 'mbot.turnBlock',
-                        default: 'turn robot [DIR] at [SPEED] degrees per second',
-                        description: 'Turn the robot at a specified speed.'
-                    }),
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        DIR: {
-                            type: ArgumentType.STRING,
-                            menu: 'angle',
-                            defaultValue: 'left'
+                            defaultValue: 0.0
                         },
-                        SPEED: {
+                        VY: {
                             type: ArgumentType.NUMBER,
-                            defaultValue: 90
+                            defaultValue: 0.0
+                        },
+                        WZ: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0.0
                         }
                     }
                 },
@@ -104,30 +76,30 @@ class Scratch3MBot
                     }),
                     blockType: BlockType.COMMAND
                 },
+                // {
+                //     opcode: 'detectObstacle',
+                //     text: formatMessage({
+                //         id: 'mbot.detectObstacleBlock',
+                //         default: 'is there an obstacle within [DIST] meters the robot\'s [DIR]?',
+                //         description: 'Detect if there is an obstacle in the specified direction relative to the robot.'
+                //     }),
+                //     blockType: BlockType.BOOLEAN,
+                //     arguments: {
+                //         DIST: {
+                //             type: ArgumentType.NUMBER,
+                //             defaultValue: 0.0
+                //         },
+                //         DIR: {
+                //             type: ArgumentType.STRING,
+                //             menu: 'direction',
+                //             defaultValue: 'front'
+                //         }
+                //     }
+                // },
                 {
                     opcode: 'detectObstacle',
                     text: formatMessage({
                         id: 'mbot.detectObstacleBlock',
-                        default: 'is there an obstacle within [DIST] meters the robot\'s [DIR]?',
-                        description: 'Detect if there is an obstacle in the specified direction relative to the robot.'
-                    }),
-                    blockType: BlockType.BOOLEAN,
-                    arguments: {
-                        DIST: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 0.5
-                        },
-                        DIR: {
-                            type: ArgumentType.STRING,
-                            menu: 'direction',
-                            defaultValue: 'front'
-                        }
-                    }
-                },
-                {
-                    opcode: 'detectObstacleAdvanced',
-                    text: formatMessage({
-                        id: 'mbot.detectObstacleBlockAdvanced',
                         default: 'is there an obstacle within [DIST] meters the robot\'s [ANGLE]?',
                         description: 'Detect if there is an obstacle in the specified angle relative to the robot.'
                     }),
@@ -184,23 +156,23 @@ class Scratch3MBot
                     arguments: {}
                 },
                 {
-                    opcode: `getDirection`,
+                    opcode: `getHeading`,
                     text: formatMessage({
-                        id: 'mbot.getDirectionBlock',
-                        default: 'direction',
-                        description: 'Get the direction of the robot.'
+                        id: 'mbot.getHeadingBlock',
+                        default: 'heading',
+                        description: 'Get the heading of the robot.'
                     }),
                     blockType: BlockType.REPORTER,
                     arguments: {}
                 },
-                {
-                    opcode: `predictNumber`,
-                    text: formatMessage({
-                        id: 'mbot.predictNumberBlock',
-                        default: 'number from image',
-                        description: 'Get the number in view of the camera.'
-                    })
-                }
+                // {
+                //     opcode: `predictNumber`,
+                //     text: formatMessage({
+                //         id: 'mbot.predictNumberBlock',
+                //         default: 'number from image',
+                //         description: 'Get the number in view of the camera.'
+                //     })
+                // }
             ],
             menus: {
                 angle: {
@@ -265,31 +237,25 @@ class Scratch3MBot
         };
     }
     drive (args) {
-        const speed = args.SPEED * 1.0;
-        const obj = {
-            "cmd": "drive",
-            "args": {
-                "vx": -speed,
-                "vy": 0,
-                "wz": 0
-            }
-        }
-        this.socket.send(JSON.stringify(obj));
+        const vx = args.VX * 1.0;
+        const vy = args.VY * 1.0;
+        const wz = args.WZ * DEG_TO_RAD;
+        this.mbot.drive(vx, vy, wz);
     }
-    turn (args) {
-        const dir = args.DIR;
-        console.log(typeof(args.SPEED))
-        const speed = (dir === 'left') ? args.SPEED * DEG_TO_RAD : -args.SPEED * DEG_TO_RAD;
-        const obj = {
-            "cmd": "drive",
-            "args": {
-                "vx": 0,
-                "vy": 0,
-                "wz": -speed
-            }
-        }
-        this.socket.send(JSON.stringify(obj));
-    }
+    // turn (args) {
+    //     const dir = args.DIR;
+    //     console.log(typeof(args.SPEED))
+    //     const speed = (dir === 'left') ? args.SPEED * DEG_TO_RAD : -args.SPEED * DEG_TO_RAD;
+    //     const obj = {
+    //         "cmd": "drive",
+    //         "args": {
+    //             "vx": 0,
+    //             "vy": 0,
+    //             "wz": -speed
+    //         }
+    //     }
+    //     this.socket.send(JSON.stringify(obj));
+    // }
     stop () {
         const obj = {
             "cmd": "stop",
@@ -297,44 +263,44 @@ class Scratch3MBot
         }
         this.socket.send(JSON.stringify(obj));
     }
-    detectObstacle (args) {
-        if (this.robotState == null) {
-            return false;
-        }
+    // detectObstacle (args) {
+    //     if (this.robotState == null) {
+    //         return false;
+    //     }
         
-        var dir = undefined
-        switch (args.DIR) {
-            case 'right':
-                dir = 270 * DEG_TO_RAD
-                break
-            case 'left':
-                dir = 90 * DEG_TO_RAD
-                break
-            case 'front':
-                dir = 0
-                break
-            case 'back':
-                dir = 180 * DEG_TO_RAD
-                break
-        }
+    //     var dir = undefined
+    //     switch (args.DIR) {
+    //         case 'right':
+    //             dir = 270 * DEG_TO_RAD
+    //             break
+    //         case 'left':
+    //             dir = 90 * DEG_TO_RAD
+    //             break
+    //         case 'front':
+    //             dir = 0
+    //             break
+    //         case 'back':
+    //             dir = 180 * DEG_TO_RAD
+    //             break
+    //     }
 
-        if (dir === undefined) {
-            return false;
-        }
+    //     if (dir === undefined) {
+    //         return false;
+    //     }
 
-        const dist = args.DIST
-        const slice_size = 30 * DEG_TO_RAD
+    //     const dist = args.DIST
+    //     const slice_size = 30 * DEG_TO_RAD
 
-        for (let i = 0; i < this.robotState.scan.ranges.length; i++) {
-            var range = this.robotState.scan.ranges[i]
-            var theta = this.robotState.scan.thetas[i]
-            if (range < dist && range > 0 && Math.abs(theta - dir) < slice_size) {
-                return true
-            }
-        }
-        return false
-    }
-    detectObstacleAdvanced(args){
+    //     for (let i = 0; i < this.robotState.scan.ranges.length; i++) {
+    //         var range = this.robotState.scan.ranges[i]
+    //         var theta = this.robotState.scan.thetas[i]
+    //         if (range < dist && range > 0 && Math.abs(theta - dir) < slice_size) {
+    //             return true
+    //         }
+    //     }
+    //     return false
+    // }
+    detectObstacle(args){
         if (this.robotState == null) {
             return false;
         }
@@ -362,25 +328,21 @@ class Scratch3MBot
         this.connectToServer(); 
     }
     resetPosition () {
-        const obj = {
-            "cmd": "reset_odometry",
-            "args": {}
-        }
-        this.socket.send(JSON.stringify(obj));
+        this.mbot.publish(MBotAPI.config.RESET_ODOMETRY.channel, { x: 0, y: 0, theta: 0 });
     }
     getXPosition () {
-        return this.robotState.pose.x;
+        return this.mbot_odom.x;
     }
 
     getYPosition () {
-        return this.robotState.pose.y;
+        return this.mbot_odom.y;
     } 
     getDirection () {
-        return this.robotState.pose.theta * 180 / Math.PI;
+        return this.mbot_odom.theta * 180 / Math.PI;
     }
-    predictNumber () {
-        return this.robotState.prediction
-    }
+    // predictNumber () {
+    //     return this.robotState.prediction
+    // }
 
 }
 
