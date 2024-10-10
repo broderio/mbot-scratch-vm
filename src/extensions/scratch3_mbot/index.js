@@ -116,6 +116,16 @@ class Scratch3MBot
                     }
                 },
                 {
+                    opcode: 'angleToNearestObstacle',
+                    text: formatMessage({
+                        id: 'mbot.angleToNearestObstacle',
+                        default: 'angle to nearest obstacle',
+                        description: 'Return the angle to the nearest obstacle.'
+                    }),
+                    blockType: BlockType.REPORTER,
+                    arguments: {}
+                },
+                {
                     opcode: `reconnectRobot`,
                     text: formatMessage({
                         id: 'mbot.reconnectRobotBlock',
@@ -318,6 +328,23 @@ class Scratch3MBot
             }
         }
         return false
+    }
+    angelToNearestObstacle () {
+        if (this.mbot_scan == null) {
+            return 0;
+        }
+
+        var min_range = 1000
+        var min_theta = 0
+        for (let i = 0; i < this.mbot_scan.data.ranges.length; i++) {
+            var range = this.mbot_scan.data.ranges[i]
+            var theta = this.mbot_scan.data.thetas[i]
+            if (range < min_range && range > 0) {
+                min_range = range
+                min_theta = theta
+            }
+        }
+        return min_theta * 180 / Math.PI
     }
     reconnectRobot () {
         this.socket.close();
