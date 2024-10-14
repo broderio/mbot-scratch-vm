@@ -24,6 +24,9 @@ fi
 if [ ! -f "/usr/bin/node" ]; then
   sudo ln -s /home/mbot/.nvm/versions/node/v22.9.0/bin/node /usr/bin/node
 fi
+if [ ! -f "/usr/bin/npx" ]; then
+  sudo ln -s /home/mbot/.nvm/versions/node/v22.9.0/bin/npx /usr/bin/npx
+fi
 
 npm install
 npm link
