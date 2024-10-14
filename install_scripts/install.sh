@@ -17,5 +17,13 @@ if [ -z "$NVM_DIR" ]; then
   nvm -v
 fi
 
+# Create a symlink for node and npm
+if [ ! -f "/usr/bin/npm" ]; then
+  sudo ln -s /home/mbot/.nvm/versions/node/v22.9.0/bin/npm /usr/bin/npm
+fi
+if [ ! -f "/usr/bin/node" ]; then
+  sudo ln -s /home/mbot/.nvm/versions/node/v22.9.0/bin/node /usr/bin/node
+fi
+
 npm install
 npm link
